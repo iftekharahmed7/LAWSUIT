@@ -26,8 +26,11 @@ app.use('/api/documents', documentRoutes);
 const bookingRoutes = require('./routes/bookingRoutes');
 app.use('/api/bookings', bookingRoutes);
 
+const chatRoutes = require('./routes/chatRoutes');
+app.use('/api/chat', chatRoutes);
+
 app.get('/', (req, res) => {
   res.send('LawSuite backend is running!');
 });
 
-app.listen(5000, () => console.log('Server running on port 5000'));
+app.listen(process.env.PORT || 5000, () => console.log('Server running on port', process.env.PORT || 5000));
