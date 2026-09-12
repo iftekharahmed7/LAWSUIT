@@ -37,22 +37,23 @@ app.use('/api/bookings', bookingRoutes);
 const chatRoutes = require('./routes/chatRoutes');
 app.use('/api/chat', chatRoutes);
 
-app.get('/', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     message: 'LawSuite backend is running!',
     mongoConnected: mongoose.connection.readyState === 1,
-    endpoints: [
-      '/api/auth',
-      '/api/lawyers',
-      '/api/documents',
-      '/api/glossary',
-      '/api/bookings',
-      '/api/chat'
-    ]
+    endpoints: ['/api/auth', '/api/lawyers', '/api/documents', '/api/glossary', '/api/bookings', '/api/chat']
   });
 });
 
+// Serve the built frontend from this same server - this is what makes the
+// whole site reachable from ONE url with zero CORS setup, since the page
+// and its API calls are same-origin. Must stay AFTER the /api/... routes.
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'FRONTEND', 'dist')));
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, 'FRONTEND', 'dist', 'index.html'));
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 LawSuite backend running on http://localhost:${PORT}`);
