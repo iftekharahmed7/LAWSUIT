@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 type Term = { _id: string; term: string; definition: string };
 
-const API_BASE = "http://localhost:5000";
+import { API_BASE } from "@/lib/apiBase";
 
 export default function Glossary() {
   const [terms, setTerms] = useState<Term[]>([]);

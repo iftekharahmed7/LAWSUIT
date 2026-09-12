@@ -10,7 +10,7 @@ type Lawyer = {
   rating: number;
 };
 
-const API_BASE = "http://localhost:5000";
+import { API_BASE } from "@/lib/apiBase";
 
 export default function Lawyers() {
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);

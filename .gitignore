@@ -1,9 +1,3 @@
-<<<<<<< HEAD
 node_modules/
 .env
-=======
-node_modules
->>>>>>> supra-feature
-cat .gitignore
-
-
+dist/

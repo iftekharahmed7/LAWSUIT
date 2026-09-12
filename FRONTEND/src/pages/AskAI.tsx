@@ -2,7 +2,7 @@ import { useState } from "react";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-const API_BASE = "http://localhost:5000";
+import { API_BASE } from "@/lib/apiBase";
 
 export default function AskAI() {
   const [messages, setMessages] = useState<Message[]>([]);

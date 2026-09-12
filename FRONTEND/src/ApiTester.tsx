@@ -1,3 +1,4 @@
+import { API_BASE } from "./lib/apiBase";
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ export function ApiTester() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
