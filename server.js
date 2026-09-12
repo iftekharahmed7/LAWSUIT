@@ -42,14 +42,7 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     message: 'LawSuite backend is running!',
     mongoConnected: mongoose.connection.readyState === 1,
-    endpoints: [
-      '/api/auth',
-      '/api/lawyers',
-      '/api/documents',
-      '/api/glossary',
-      '/api/bookings',
-      '/api/chat'
-    ]
+    endpoints: ['/api/auth', '/api/lawyers', '/api/documents', '/api/glossary', '/api/bookings', '/api/chat']
   });
 });
 
