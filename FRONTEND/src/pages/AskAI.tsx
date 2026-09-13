@@ -22,11 +22,14 @@ export default function AskAI() {
       const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg.content }),
+        body: JSON.stringify({ question: userMsg.content, language: "en" }),
       });
-      if (!res.ok) throw new Error(`Server responded ${res.status}`);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || `Server responded ${res.status}`);
+      }
       const data = await res.json();
-      const reply = data.reply || data.message || JSON.stringify(data);
+      const reply = data.answer || "No answer was returned.";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
       setError(

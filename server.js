@@ -37,6 +37,12 @@ app.use('/api/bookings', bookingRoutes);
 const chatRoutes = require('./routes/chatRoutes');
 app.use('/api/chat', chatRoutes);
 
+const legalNewsRoutes = require('./routes/legalNewsRoutes');
+app.use('/api/legal-news', legalNewsRoutes);
+
+const summarizeRoutes = require('./routes/summarizeRoutes');
+app.use('/api/summarize', summarizeRoutes);
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
