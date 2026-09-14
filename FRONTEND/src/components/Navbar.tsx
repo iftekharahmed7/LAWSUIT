@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
   { to: "/ask", label: "Ask AI" },
@@ -11,6 +12,14 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  function handleSignOut() {
+    signOut();
+    navigate("/");
+  }
+
   return (
     <header className="bg-emerald-950 text-stone-100">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
@@ -37,9 +46,25 @@ export default function Navbar() {
           <button className="text-sm text-stone-200 transition-colors hover:text-amber-400">
             বাংলা
           </button>
-          <button className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-emerald-950 transition-colors hover:bg-amber-400">
-            Sign in
-          </button>
+
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-stone-200">{user.name}</span>
+              <button
+                onClick={handleSignOut}
+                className="rounded-md border border-stone-400 px-4 py-2 text-sm font-medium text-stone-100 transition-colors hover:border-amber-400 hover:text-amber-400"
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/signin"
+              className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-emerald-950 transition-colors hover:bg-amber-400"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </div>
     </header>
