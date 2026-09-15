@@ -11,7 +11,7 @@ const features = [
   { icon: "🔍", title: "Legal glossary", desc: "Jargon, decoded", to: "/glossary" },
   { icon: "📄", title: "Summarise a document", desc: "Paste it, understand it", to: "/summarise" },
   { icon: "📰", title: "Legal news", desc: "What changed this month", to: "/news" },
-  { icon: "🆘", title: "Emergency helpline", desc: "Numbers that answer now", to: "/rights" },
+  { icon: "🆘", title: "Emergency helpline", desc: "Numbers that answer now", to: "/helpline" },
   { icon: "🖊", title: "Smart document filler", desc: "Guided, then downloaded", to: "/templates" },
 ];
 
