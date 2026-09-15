@@ -3,7 +3,14 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.set('trust proxy', 1);
+// Only trust proxy headers when actually running on Render (which always
+// sets RENDER=true) - otherwise Codespaces' own port-forwarding layer also
+// injects X-Forwarded-Proto: https even for direct localhost requests,
+// which would make req.protocol wrongly report "https" during local
+// testing and break the password reset email link.
+if (process.env.RENDER) {
+  app.set('trust proxy', 1);
+}
 app.use(cors());
 app.use(express.json());
 
