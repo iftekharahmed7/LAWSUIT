@@ -49,6 +49,12 @@ export default function Navbar() {
 
           {user ? (
             <div className="flex items-center gap-3">
+              <Link
+                to="/bookings"
+                className="text-sm text-stone-200 transition-colors hover:text-amber-400"
+              >
+                My Bookings
+              </Link>
               <span className="text-sm text-stone-200">{user.name}</span>
               <button
                 onClick={handleSignOut}

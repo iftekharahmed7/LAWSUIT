@@ -11,6 +11,7 @@ import KnowYourRights from "./pages/KnowYourRights";
 import LegalNews from "./pages/LegalNews";
 import SummariseDocument from "./pages/SummariseDocument";
 import Helpline from "./pages/Helpline";
+import MyBookings from "./pages/MyBookings";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/news" element={<LegalNews />} />
             <Route path="/summarise" element={<SummariseDocument />} />
             <Route path="/helpline" element={<Helpline />} />
+            <Route path="/bookings" element={<MyBookings />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
