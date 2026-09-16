@@ -14,6 +14,8 @@ type Lawyer = {
   rating: number;
 };
 
+const SPECIALIZATIONS = ["family", "property", "criminal", "labor", "consumer", "corporate", "general"];
+
 export default function Lawyers() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -23,16 +25,30 @@ export default function Lawyers() {
   const [bookingLawyer, setBookingLawyer] = useState<Lawyer | null>(null);
   const [justBooked, setJustBooked] = useState(false);
 
+  const [specialization, setSpecialization] = useState("");
+  const [location, setLocation] = useState("");
+  const [name, setName] = useState("");
+
   useEffect(() => {
-    fetch(`${API_BASE}/api/lawyers`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Server responded ${res.status}`);
-        return res.json();
-      })
-      .then(setLawyers)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (specialization) params.set("specialization", specialization);
+      if (location) params.set("location", location);
+      if (name) params.set("name", name);
+
+      setLoading(true);
+      fetch(`${API_BASE}/api/lawyers/search?${params.toString()}`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`Server responded ${res.status}`);
+          return res.json();
+        })
+        .then(setLawyers)
+        .catch((err) => setError(err.message))
+        .finally(() => setLoading(false));
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [specialization, location, name]);
 
   function handleBookClick(lawyer: Lawyer) {
     if (!user) {
@@ -48,12 +64,66 @@ export default function Lawyers() {
     setTimeout(() => setJustBooked(false), 4000);
   }
 
+  function clearFilters() {
+    setSpecialization("");
+    setLocation("");
+    setName("");
+  }
+
+  const hasFilters = specialization || location || name;
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
       <h1 className="font-serif text-3xl text-emerald-950">Find a lawyer</h1>
       <p className="mt-2 text-stone-600">
         Browse lawyers by specialization and location.
       </p>
+
+      <div className="mt-6 flex flex-wrap items-end gap-4 rounded-lg border border-stone-200 bg-white p-4">
+        <div>
+          <label className="mb-1 block text-xs text-stone-500">Specialization</label>
+          <select
+            value={specialization}
+            onChange={(e) => setSpecialization(e.target.value)}
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none"
+          >
+            <option value="">All</option>
+            {SPECIALIZATIONS.map((s) => (
+              <option key={s} value={s}>
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-stone-500">Location</label>
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="e.g. Dhaka"
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-stone-500">Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Search by name"
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none"
+          />
+        </div>
+        {hasFilters && (
+          <button
+            onClick={clearFilters}
+            className="text-sm text-stone-500 underline hover:text-stone-700"
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
 
       {justBooked && (
         <p className="mt-6 rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -70,6 +140,9 @@ export default function Lawyers() {
         <p className="mt-8 text-sm text-red-600">
           {error} — check that the backend server is running on port 5000.
         </p>
+      )}
+      {!loading && !error && lawyers.length === 0 && (
+        <p className="mt-8 text-stone-400">No lawyers match those filters.</p>
       )}
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
