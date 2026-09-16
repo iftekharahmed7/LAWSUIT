@@ -50,7 +50,7 @@ export default function DocumentDetail() {
           </p>
 
           {doc.fileUrl && (
-            
+            <a
               href={doc.fileUrl}
               target="_blank"
               rel="noopener noreferrer"
