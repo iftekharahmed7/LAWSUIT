@@ -5,6 +5,7 @@ const navLinks = [
   { to: "/ask", label: "Ask AI" },
   { to: "/lawyers", label: "Lawyers" },
   { to: "/templates", label: "Templates" },
+  { to: "/documents", label: "Documents" },
   { to: "/rights", label: "Know your rights" },
   { to: "/glossary", label: "Glossary" },
   { to: "/news", label: "Legal news" },
