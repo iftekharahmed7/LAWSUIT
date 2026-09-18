@@ -1,25 +1,10 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-
-const navLinks = [
-  { to: "/ask", label: "Ask AI" },
-  { to: "/lawyers", label: "Lawyers" },
-  { to: "/templates", label: "Templates" },
-  { to: "/documents", label: "Documents" },
-  { to: "/rights", label: "Know your rights" },
-  { to: "/glossary", label: "Glossary" },
-  { to: "/news", label: "Legal news" },
-  { to: "/summarise", label: "Summarise a document" },
-];
+import NavDropdown from "./NavDropdown";
+import UserMenu from "./UserMenu";
 
 export default function Navbar() {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  function handleSignOut() {
-    signOut();
-    navigate("/");
-  }
+  const { user } = useAuth();
 
   return (
     <header className="bg-emerald-950 text-stone-100">
@@ -31,16 +16,33 @@ export default function Navbar() {
           <span aria-hidden>⚖</span> LawSuite
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-7 text-sm lg:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="whitespace-nowrap text-stone-200 transition-colors hover:text-amber-400"
-            >
-              {link.label}
-            </Link>
-          ))}
+        <nav className="hidden flex-1 items-center justify-center gap-8 text-sm lg:flex">
+          <Link to="/ask" className="whitespace-nowrap text-stone-200 transition-colors hover:text-amber-400">
+            Ask AI
+          </Link>
+          <NavDropdown
+            label="Lawyers"
+            items={[
+              { to: "/lawyers", label: "Find a Lawyer" },
+              { to: "/bookings", label: "My Bookings" },
+            ]}
+          />
+          <NavDropdown
+            label="Documents"
+            items={[
+              { to: "/templates", label: "Templates" },
+              { to: "/documents", label: "Documents" },
+              { to: "/summarise", label: "Summarise a document" },
+            ]}
+          />
+          <NavDropdown
+            label="Resources"
+            items={[
+              { to: "/rights", label: "Know your rights" },
+              { to: "/glossary", label: "Glossary" },
+              { to: "/news", label: "Legal news" },
+            ]}
+          />
         </nav>
 
         <div className="flex shrink-0 items-center gap-4">
@@ -49,21 +51,7 @@ export default function Navbar() {
           </button>
 
           {user ? (
-            <div className="flex items-center gap-3">
-              <Link
-                to="/bookings"
-                className="text-sm text-stone-200 transition-colors hover:text-amber-400"
-              >
-                My Bookings
-              </Link>
-              <span className="text-sm text-stone-200">{user.name}</span>
-              <button
-                onClick={handleSignOut}
-                className="rounded-md border border-stone-400 px-4 py-2 text-sm font-medium text-stone-100 transition-colors hover:border-amber-400 hover:text-amber-400"
-              >
-                Sign out
-              </button>
-            </div>
+            <UserMenu />
           ) : (
             <Link
               to="/signin"
