@@ -1,0 +1,45 @@
+.legal-topics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 420px;
+}
+
+.legal-topic-card {
+  display: block;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(255, 255, 255, 0.03);
+  text-decoration: none;
+  color: #f5f1e6;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.legal-topic-card:hover {
+  border-color: #d4af37;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.legal-topic-number {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d4af37;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+}
+
+.legal-topic-title {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.legal-topic-description {
+  display: block;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(245, 241, 230, 0.7);
+}
