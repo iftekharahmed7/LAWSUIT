@@ -29,19 +29,33 @@ const getMyBookings = async (req, res) => {
   }
 };
 
+// Only an admin can move a booking to 'confirmed' or 'completed' - those
+// statuses represent the lawyer/admin side actually confirming or having
+// held the appointment. The booking owner can only cancel their own
+// booking; letting an owner self-confirm would make the status meaningless.
+const OWNER_ALLOWED_STATUSES = ['cancelled'];
+const ALL_STATUSES = ['pending', 'confirmed', 'cancelled', 'completed'];
+
 const updateBookingStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const booking = await Booking.findById(req.params.id);
+    if (!ALL_STATUSES.includes(status)) {
+      return res.status(400).json({ message: `status must be one of: ${ALL_STATUSES.join(', ')}` });
+    }
 
+    const booking = await Booking.findById(req.params.id);
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
     const isOwner = booking.user.toString() === req.user.id;
     const isAdmin = req.user.role === 'admin';
+
     if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized to update this booking' });
+    }
+    if (isOwner && !isAdmin && !OWNER_ALLOWED_STATUSES.includes(status)) {
+      return res.status(403).json({ message: 'You can only cancel your own booking - confirmation is handled by the lawyer/admin.' });
     }
 
     booking.status = status;
