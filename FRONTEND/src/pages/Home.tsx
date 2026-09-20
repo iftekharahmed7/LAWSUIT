@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import TiltCard from "@/components/TiltCard";
 
@@ -17,6 +18,8 @@ const features = [
 ];
 
 export default function Home() {
+  const [showFeatures, setShowFeatures] = useState(false);
+
   return (
     <div className="bg-stone-50">
       {/* Hero */}
@@ -60,27 +63,51 @@ export default function Home() {
 
       {/* Feature grid */}
       <section className="mx-auto max-w-7xl px-6 py-20">
-        <h2 className="font-serif text-3xl text-emerald-950">
-          Everything else you might need
-        </h2>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((f) => (
-            <TiltCard key={f.title} className="rounded-lg">
-              <Link
-                to={f.to}
-                className="flex items-center justify-between rounded-lg border border-stone-200 bg-white p-6 shadow-sm transition hover:border-amber-400 hover:shadow-md"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-2xl">{f.icon}</span>
-                  <div>
-                    <p className="font-medium text-emerald-950">{f.title}</p>
-                    <p className="text-sm text-stone-500">{f.desc}</p>
+        <div className="flex flex-col items-center gap-6 text-center">
+          <h2 className="font-serif text-3xl text-emerald-950">
+            Everything else you might need
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowFeatures((s) => !s)}
+            aria-expanded={showFeatures}
+            aria-label={showFeatures ? "Hide the feature list" : "Show the feature list"}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-emerald-950 shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-amber-400 active:scale-95"
+          >
+            <span
+              className={`text-2xl font-light leading-none transition-transform duration-300 ${
+                showFeatures ? "rotate-45" : ""
+              }`}
+            >
+              +
+            </span>
+          </button>
+        </div>
+
+        <div
+          className={`mt-10 grid overflow-hidden transition-all duration-500 ease-out ${
+            showFeatures ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((f) => (
+              <TiltCard key={f.title} className="rounded-lg">
+                <Link
+                  to={f.to}
+                  className="flex items-center justify-between rounded-lg border border-stone-200 bg-white p-6 shadow-sm transition hover:border-amber-400 hover:shadow-md"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-2xl">{f.icon}</span>
+                    <div>
+                      <p className="font-medium text-emerald-950">{f.title}</p>
+                      <p className="text-sm text-stone-500">{f.desc}</p>
+                    </div>
                   </div>
-                </div>
-                <span className="text-stone-400">→</span>
-              </Link>
-            </TiltCard>
-          ))}
+                  <span className="text-stone-400">→</span>
+                </Link>
+              </TiltCard>
+            ))}
+          </div>
         </div>
       </section>
 
