@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import TiltCard from "@/components/TiltCard";
 
 const stats = [
   { value: "18", label: "FEATURES SHIPPED" },
@@ -64,20 +65,21 @@ export default function Home() {
         </h2>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
-            <Link
-              key={f.title}
-              to={f.to}
-              className="flex items-center justify-between rounded-lg border border-stone-200 bg-white p-6 shadow-sm transition hover:border-amber-400 hover:shadow-md"
-            >
-              <div className="flex items-center gap-4">
-                <span className="text-2xl">{f.icon}</span>
-                <div>
-                  <p className="font-medium text-emerald-950">{f.title}</p>
-                  <p className="text-sm text-stone-500">{f.desc}</p>
+            <TiltCard key={f.title} className="rounded-lg">
+              <Link
+                to={f.to}
+                className="flex items-center justify-between rounded-lg border border-stone-200 bg-white p-6 shadow-sm transition hover:border-amber-400 hover:shadow-md"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-2xl">{f.icon}</span>
+                  <div>
+                    <p className="font-medium text-emerald-950">{f.title}</p>
+                    <p className="text-sm text-stone-500">{f.desc}</p>
+                  </div>
                 </div>
-              </div>
-              <span className="text-stone-400">→</span>
-            </Link>
+                <span className="text-stone-400">→</span>
+              </Link>
+            </TiltCard>
           ))}
         </div>
       </section>

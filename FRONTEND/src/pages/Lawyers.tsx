@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { API_BASE } from "@/lib/apiBase";
 import BookingModal from "@/components/BookingModal";
+import TiltCard from "@/components/TiltCard";
 
 type Lawyer = {
   _id: string;
@@ -147,7 +148,7 @@ export default function Lawyers() {
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         {lawyers.map((l) => (
-          <div
+          <TiltCard
             key={l._id}
             className="flex flex-col rounded-lg border border-stone-200 bg-white p-6"
           >
@@ -168,7 +169,7 @@ export default function Lawyers() {
             >
               Book consultation
             </button>
-          </div>
+          </TiltCard>
         ))}
       </div>
 
