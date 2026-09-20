@@ -6,7 +6,7 @@ const { sendEmail } = require('../utils/sendEmail');
 
 const signup = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -15,11 +15,13 @@ const signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // role is never taken from the client - every account starts as a plain
+    // 'user'. Promotion to 'admin'/'lawyer' happens out-of-band (see
+    // scripts/makeAdmin.js), never via this public endpoint.
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
-      role,
     });
 
     await newUser.save();
