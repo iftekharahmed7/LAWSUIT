@@ -29,9 +29,16 @@ const getMyBookings = async (req, res) => {
   }
 };
 
+const VALID_STATUSES = ['pending', 'confirmed', 'cancelled', 'completed'];
+
 const updateBookingStatus = async (req, res) => {
   try {
     const { status } = req.body;
+
+    if (!VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
     const booking = await Booking.findById(req.params.id);
 
     if (!booking) {
@@ -42,6 +49,13 @@ const updateBookingStatus = async (req, res) => {
     const isAdmin = req.user.role === 'admin';
     if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized to update this booking' });
+    }
+
+    // Owners may only cancel their own booking. Confirming/completing a
+    // booking is a lawyer/admin decision, not something the requester can
+    // grant themselves.
+    if (isOwner && !isAdmin && status !== 'cancelled') {
+      return res.status(403).json({ message: 'Only an admin can set this status' });
     }
 
     booking.status = status;
