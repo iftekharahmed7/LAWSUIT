@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { API_BASE } from "@/lib/apiBase";
+import TiltCard from "@/components/TiltCard";
 
 type Doc = {
   _id: string;
@@ -160,19 +161,20 @@ export default function Documents() {
 
       <div className="mt-8 space-y-4">
         {docs.map((d) => (
-          <Link
-            key={d._id}
-            to={`/documents/${d._id}`}
-            className="block rounded-lg border border-stone-200 bg-white p-5 transition hover:border-amber-400 hover:shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              <h2 className="font-medium text-emerald-950">{d.title}</h2>
-              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">
-                {d.category}
-              </span>
-            </div>
-            <p className="mt-2 line-clamp-2 text-sm text-stone-600">{d.content}</p>
-          </Link>
+          <TiltCard key={d._id} className="block rounded-lg">
+            <Link
+              to={`/documents/${d._id}`}
+              className="block rounded-lg border border-stone-200 bg-white p-5 transition hover:border-amber-400 hover:shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <h2 className="font-medium text-emerald-950">{d.title}</h2>
+                <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">
+                  {d.category}
+                </span>
+              </div>
+              <p className="mt-2 line-clamp-2 text-sm text-stone-600">{d.content}</p>
+            </Link>
+          </TiltCard>
         ))}
       </div>
     </div>
