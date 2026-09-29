@@ -4,11 +4,51 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/sendEmail');
 
+const NAME_MAX = 100;
+const EMAIL_MAX = 254;
+const PASSWORD_MIN = 6;
+const PASSWORD_MAX_BYTES = 72; // bcrypt ignores anything past 72 bytes
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Only plain strings are accepted from the request body. This is what stops
+// NoSQL operator injection like {"email": {"$ne": null}}.
+const cleanEmail = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : null);
+
+const escapeHtml = (s) =>
+  String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const serverError = (res, where, error) => {
+  console.error(`[auth:${where}]`, error);
+  return res.status(500).json({ message: 'Server error' });
+};
+
+const passwordProblem = (password) => {
+  if (typeof password !== 'string' || password.length < PASSWORD_MIN) {
+    return `Password must be at least ${PASSWORD_MIN} characters.`;
+  }
+  if (Buffer.byteLength(password) > PASSWORD_MAX_BYTES) {
+    return 'Password is too long (maximum 72 bytes).';
+  }
+  return null;
+};
+
 const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const cleanName = typeof name === 'string' ? name.trim() : '';
+    const emailNorm = cleanEmail(email);
+
+    if (!cleanName || cleanName.length > NAME_MAX) {
+      return res.status(400).json({ message: 'Please enter your name.' });
+    }
+    if (!emailNorm || emailNorm.length > EMAIL_MAX || !EMAIL_RE.test(emailNorm)) {
+      return res.status(400).json({ message: 'Please enter a valid email address.' });
+    }
+    const pwProblem = passwordProblem(password);
+    if (pwProblem) return res.status(400).json({ message: pwProblem });
+
+    const existingUser = await User.findOne({ email: emailNorm });
     if (existingUser) {
       return res.status(400).json({ message: 'Email already registered' });
     }
@@ -18,25 +58,31 @@ const signup = async (req, res) => {
     // role is never taken from the client - every account starts as a plain
     // 'user'. Promotion to 'admin'/'lawyer' happens out-of-band (see
     // scripts/makeAdmin.js), never via this public endpoint.
-    const newUser = new User({
-      name,
-      email,
-      password: hashedPassword,
-    });
-
+    const newUser = new User({ name: cleanName, email: emailNorm, password: hashedPassword });
     await newUser.save();
 
-    res.status(201).json({ message: 'User created successfully', user: { name, email, role: newUser.role } });
+    res.status(201).json({
+      message: 'User created successfully',
+      user: { name: cleanName, email: emailNorm, role: newUser.role },
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    if (error && error.code === 11000) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+    return serverError(res, 'signup', error);
   }
 };
 
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const emailNorm = cleanEmail(email);
 
-    const user = await User.findOne({ email });
+    if (!emailNorm || typeof password !== 'string') {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const user = await User.findOne({ email: emailNorm });
     if (!user) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
@@ -58,11 +104,9 @@ const login = async (req, res) => {
       user: { name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    return serverError(res, 'login', error);
   }
 };
-
-module.exports = { signup, login };
 
 /**
  * POST /api/auth/forgot-password  body: { email }
@@ -72,10 +116,10 @@ module.exports = { signup, login };
 const forgotPassword = async (req, res) => {
   const genericResponse = { message: 'If an account exists for that email, a reset link has been sent.' };
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required' });
+    const emailNorm = cleanEmail(req.body.email);
+    if (!emailNorm) return res.status(400).json({ message: 'Email is required' });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: emailNorm });
     if (!user) return res.status(200).json(genericResponse);
 
     const rawToken = crypto.randomBytes(32).toString('hex');
@@ -85,10 +129,6 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await user.save();
 
-    // req.protocol/host reflect the real deployed URL automatically (Render
-    // or your Codespace's forwarded port) - see server.js's `trust proxy`
-    // setting, which is what makes req.protocol report "https" correctly
-    // when running behind Render's reverse proxy.
     // Never build this from the Host header - an attacker can forge it and get
     // victims emailed a reset link pointing at their own site.
     if (!process.env.APP_URL) console.warn('[forgotPassword] APP_URL is not set - falling back to the request Host header (unsafe in production).');
@@ -99,7 +139,7 @@ const forgotPassword = async (req, res) => {
       to: user.email,
       subject: 'Reset your LawSuite password',
       html: `
-        <p>Hi ${user.name},</p>
+        <p>Hi ${escapeHtml(user.name)},</p>
         <p>Click the link below to reset your LawSuite password. This link expires in 1 hour.</p>
         <p><a href="${resetUrl}">${resetUrl}</a></p>
         <p>If you didn't request this, you can safely ignore this email.</p>
@@ -112,7 +152,7 @@ const forgotPassword = async (req, res) => {
 
     res.status(200).json(genericResponse);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    return serverError(res, 'forgotPassword', error);
   }
 };
 
@@ -122,12 +162,11 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
-    if (!token || !newPassword) {
+    if (typeof token !== 'string' || !token || typeof newPassword !== 'string' || !newPassword) {
       return res.status(400).json({ message: 'Token and new password are required' });
     }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters' });
-    }
+    const pwProblem = passwordProblem(newPassword);
+    if (pwProblem) return res.status(400).json({ message: pwProblem });
 
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
@@ -146,9 +185,8 @@ const resetPassword = async (req, res) => {
 
     res.status(200).json({ message: 'Password reset successfully. You can now sign in.' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    return serverError(res, 'resetPassword', error);
   }
 };
 
-module.exports.forgotPassword = forgotPassword;
-module.exports.resetPassword = resetPassword;
+module.exports = { signup, login, forgotPassword, resetPassword };
