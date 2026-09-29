@@ -3,6 +3,10 @@ const DISCLAIMER_EN =
 const DISCLAIMER_BN =
   'এটি সাধারণ আইনি তথ্য, আইনি পরামর্শ নয়। আপনার নির্দিষ্ট পরিস্থিতির জন্য একজন আইনজীবীর পরামর্শ নিন।';
 
+const MAX_QUESTION_CHARS = 2000;
+const MAX_HISTORY_MESSAGES = 10;
+const MAX_HISTORY_MESSAGE_CHARS = 2000;
+
 function buildSystemPrompt(lang) {
   const bn = lang === 'bn';
   return [
@@ -24,6 +28,11 @@ const askQuestion = async (req, res) => {
     if (!question || typeof question !== 'string' || question.trim().length < 2) {
       return res.status(400).json({ message: 'question is required' });
     }
+    if (question.length > MAX_QUESTION_CHARS) {
+      return res.status(400).json({
+        message: `Your question is too long. Please keep it under ${MAX_QUESTION_CHARS} characters.`,
+      });
+    }
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ message: 'Chat is not configured yet (missing ANTHROPIC_API_KEY).' });
     }
@@ -32,7 +41,8 @@ const askQuestion = async (req, res) => {
     const safeHistory = Array.isArray(history)
       ? history
           .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
-          .slice(-20)
+          .slice(-MAX_HISTORY_MESSAGES)
+          .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_HISTORY_MESSAGE_CHARS) }))
       : [];
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
