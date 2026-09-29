@@ -89,7 +89,11 @@ const forgotPassword = async (req, res) => {
     // or your Codespace's forwarded port) - see server.js's `trust proxy`
     // setting, which is what makes req.protocol report "https" correctly
     // when running behind Render's reverse proxy.
-    const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${rawToken}`;
+    // Never build this from the Host header - an attacker can forge it and get
+    // victims emailed a reset link pointing at their own site.
+    if (!process.env.APP_URL) console.warn('[forgotPassword] APP_URL is not set - falling back to the request Host header (unsafe in production).');
+    const baseUrl = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
 
     const sent = await sendEmail({
       to: user.email,
@@ -103,7 +107,7 @@ const forgotPassword = async (req, res) => {
     });
 
     if (!sent) {
-      console.warn(`[forgotPassword] Email not actually sent for ${user.email} - EMAIL_USER/EMAIL_PASS may not be configured.`);
+      console.warn(`[forgotPassword] Email not actually sent for ${user.email} - RESEND_API_KEY may not be configured.`);
     }
 
     res.status(200).json(genericResponse);
