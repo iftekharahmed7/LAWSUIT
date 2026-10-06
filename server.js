@@ -11,7 +11,9 @@ const app = express();
 if (process.env.RENDER) {
   app.set('trust proxy', 1);
 }
-app.use(cors());
+// Production serves the site and API from one origin, so CORS is only
+// needed for local dev (frontend on a different port).
+if (!process.env.RENDER) app.use(cors());
 app.use(express.json());
 
 const mongoose = require('mongoose');
