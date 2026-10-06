@@ -15,7 +15,7 @@ async function makeAdmin() {
 
   await mongoose.connect(process.env.MONGO_URI);
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
   if (!user) {
     console.error(`No user found with email: ${email}. Sign up with this email first, then run this script.`);
     await mongoose.disconnect();
