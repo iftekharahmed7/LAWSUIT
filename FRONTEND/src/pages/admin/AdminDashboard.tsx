@@ -3,10 +3,12 @@ import { useAuth } from "@/context/AuthContext";
 import AdminOverview from "./AdminOverview";
 import AdminBookings from "./AdminBookings";
 import AdminUsers from "./AdminUsers";
+import AdminLawyers from "./AdminLawyers";
 
 const TABS = [
   { id: "overview", label: "Overview" },
   { id: "bookings", label: "Bookings" },
+  { id: "lawyers", label: "Lawyers" },
   { id: "users", label: "Users" },
 ] as const;
 
@@ -58,7 +60,7 @@ export default function AdminDashboard() {
       <h1 className="font-serif text-3xl text-emerald-950">Admin dashboard</h1>
       <p className="mt-1 text-sm text-stone-500">Signed in as {user.email}</p>
 
-      <div role="tablist" className="mt-8 flex gap-1 overflow-x-auto border-b border-stone-200">
+      <div role="tablist" className="mt-8 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-stone-200">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -79,6 +81,7 @@ export default function AdminDashboard() {
       <div className="mt-8">
         {tab === "overview" && <AdminOverview onOpen={openTab} />}
         {tab === "bookings" && <AdminBookings />}
+        {tab === "lawyers" && <AdminLawyers />}
         {tab === "users" && <AdminUsers />}
       </div>
     </div>

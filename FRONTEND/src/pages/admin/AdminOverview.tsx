@@ -83,7 +83,7 @@ export default function AdminOverview({ onOpen }: Props) {
         <h2 className="font-serif text-xl text-emerald-950">Platform</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard label="Accounts" value={stats.users} onClick={() => onOpen("users")} />
-          <StatCard label="Lawyers" value={stats.lawyers} />
+          <StatCard label="Lawyers" value={stats.lawyers} onClick={() => onOpen("lawyers")} />
           <StatCard label="Documents" value={stats.documents} />
           <StatCard label="Glossary terms" value={stats.glossaryTerms} />
           <StatCard label="News items" value={stats.newsItems} />
