@@ -4,12 +4,14 @@ import AdminOverview from "./AdminOverview";
 import AdminBookings from "./AdminBookings";
 import AdminUsers from "./AdminUsers";
 import AdminLawyers from "./AdminLawyers";
+import AdminContent from "./AdminContent";
 
 const TABS = [
   { id: "overview", label: "Overview" },
   { id: "bookings", label: "Bookings" },
   { id: "lawyers", label: "Lawyers" },
   { id: "users", label: "Users" },
+  { id: "content", label: "Content" },
 ] as const;
 
 export type AdminTab = (typeof TABS)[number]["id"];
@@ -83,6 +85,7 @@ export default function AdminDashboard() {
         {tab === "bookings" && <AdminBookings />}
         {tab === "lawyers" && <AdminLawyers />}
         {tab === "users" && <AdminUsers />}
+        {tab === "content" && <AdminContent />}
       </div>
     </div>
   );
