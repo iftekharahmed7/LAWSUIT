@@ -51,7 +51,8 @@ const summarizeDocument = async (req, res) => {
 
     res.status(200).json({ summary });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('[summarize]', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

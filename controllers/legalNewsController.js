@@ -1,11 +1,16 @@
 const LegalNews = require('../models/LegalNews');
 
+const serverError = (res, where, error) => {
+  console.error(`[legal-news:${where}]`, error);
+  return res.status(500).json({ message: 'Server error' });
+};
+
 const getAllNews = async (req, res) => {
   try {
     const news = await LegalNews.find().sort({ publishedDate: -1 });
     res.status(200).json(news);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    return serverError(res, 'all', error);
   }
 };
 
@@ -16,7 +21,10 @@ const addNews = async (req, res) => {
     await item.save();
     res.status(201).json({ message: 'News item added successfully', item });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    if (error && error.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Invalid news data: ' + Object.keys(error.errors).join(', ') });
+    }
+    return serverError(res, 'add', error);
   }
 };
 

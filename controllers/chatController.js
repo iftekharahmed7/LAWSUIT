@@ -71,7 +71,8 @@ const askQuestion = async (req, res) => {
 
     res.status(200).json({ answer });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('[chat]', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
