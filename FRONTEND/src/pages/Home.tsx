@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import TiltCard from "@/components/TiltCard";
 
 const stats = [
-  { value: "18", label: "FEATURES SHIPPED" },
+  { value: "10", label: "FREE TOOLS" },
   { value: "2", label: "LANGUAGES" },
   { value: "0 ৳", label: "TO GET STARTED" },
 ];
@@ -117,8 +117,8 @@ export default function Home() {
           Start with a question. It costs nothing.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-stone-600">
-          Anonymous mode is on by default — ask without signing up. Create
-          an account only when you want your conversations saved.
+          No account needed — ask without signing up. Create an account
+          when you want to book a lawyer or get a higher question limit.
         </p>
         <Link
           to="/ask"
