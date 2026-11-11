@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getStats, getAllBookings, getUsers, updateUserRole } = require('../controllers/adminController');
+const {
+  getStats, getAllBookings, getUsers, updateUserRole, getLawyers, linkLawyerAccount,
+} = require('../controllers/adminController');
 const content = require('../controllers/adminContentController');
 const { protect, requireRole } = require('../middleware/authMiddleware');
 
@@ -11,6 +13,8 @@ router.get('/stats', getStats);
 router.get('/bookings', getAllBookings);
 router.get('/users', getUsers);
 router.patch('/users/:id/role', updateUserRole);
+router.get('/lawyers', getLawyers);
+router.patch('/lawyers/:id/link', linkLawyerAccount);
 
 // Edit and delete content. Creating content uses the existing public-facing
 // routes (POST /api/lawyers, /api/documents, /api/glossary, /api/legal-news).

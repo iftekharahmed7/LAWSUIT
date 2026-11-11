@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const Document = require('../models/Document');
 const GlossaryTerm = require('../models/GlossaryTerm');
 const LegalNews = require('../models/LegalNews');
+const { releaseAccount } = require('./adminController');
 
 // Builds the admin "edit" and "delete" handlers for one kind of content.
 // Only the listed fields can be changed, so a request can never overwrite
@@ -60,6 +61,7 @@ function makeEditor(Model, label, fields, options = {}) {
       }
 
       await record.deleteOne();
+      if (options.afterDelete) await options.afterDelete(record);
       res.status(200).json({ message: `${label} deleted` });
     } catch (error) {
       console.error(`[admin:delete ${label}]`, error);
@@ -85,6 +87,8 @@ const lawyers = makeEditor(
         ? `This lawyer has ${active} active booking(s). Cancel or complete them first.`
         : null;
     },
+    // A deleted lawyer's account goes back to being a normal user.
+    afterDelete: (lawyer) => releaseAccount(lawyer.user),
   }
 );
 

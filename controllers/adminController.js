@@ -106,6 +106,11 @@ const updateUserRole = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    if (user.role === 'lawyer') {
+      return res.status(400).json({
+        message: 'This account is linked to a lawyer profile. Unlink it from the Lawyers tab first.',
+      });
+    }
 
     user.role = role;
     await user.save();
@@ -116,4 +121,94 @@ const updateUserRole = async (req, res) => {
   }
 };
 
-module.exports = { getStats, getAllBookings, getUsers, updateUserRole };
+// GET /api/admin/lawyers - every lawyer profile, with its linked account
+const getLawyers = async (req, res) => {
+  try {
+    const lawyers = await Lawyer.find()
+      .populate('user', 'name email')
+      .sort({ name: 1 })
+      .limit(LIST_LIMIT);
+    res.status(200).json(lawyers);
+  } catch (error) {
+    return serverError(res, 'lawyers', error);
+  }
+};
+
+// Puts an account back to a normal user when it stops being a lawyer.
+async function releaseAccount(userId) {
+  if (!userId) return;
+  const previous = await User.findById(userId);
+  if (previous && previous.role === 'lawyer') {
+    previous.role = 'user';
+    await previous.save();
+  }
+}
+
+// PATCH /api/admin/lawyers/:id/link
+//   body: { email: "lawyer@example.com" }  -> link that account to this profile
+//   body: { email: null }                  -> unlink
+const linkLawyerAccount = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ message: 'Lawyer not found' });
+    }
+    const lawyer = await Lawyer.findById(req.params.id);
+    if (!lawyer) {
+      return res.status(404).json({ message: 'Lawyer not found' });
+    }
+
+    const { email } = req.body;
+
+    // Unlink
+    if (email === null || email === '') {
+      const previousUser = lawyer.user;
+      lawyer.user = undefined;
+      await lawyer.save();
+      await releaseAccount(previousUser);
+      return res.status(200).json({ message: 'Account unlinked', lawyer });
+    }
+
+    if (typeof email !== 'string') {
+      return res.status(400).json({ message: 'Please enter an email address.' });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ message: 'No account uses that email. Ask the lawyer to sign up first.' });
+    }
+    if (user.role === 'admin') {
+      return res.status(400).json({ message: "Admin accounts can't be linked to a lawyer profile." });
+    }
+
+    const elsewhere = await Lawyer.findOne({ user: user._id, _id: { $ne: lawyer._id } });
+    if (elsewhere) {
+      return res.status(409).json({ message: `That account is already linked to ${elsewhere.name}.` });
+    }
+
+    const previousUser = lawyer.user;
+    lawyer.user = user._id;
+    await lawyer.save();
+
+    user.role = 'lawyer';
+    await user.save();
+
+    if (previousUser && String(previousUser) !== String(user._id)) {
+      await releaseAccount(previousUser);
+    }
+
+    await lawyer.populate('user', 'name email');
+    res.status(200).json({ message: 'Account linked', lawyer });
+  } catch (error) {
+    return serverError(res, 'link', error);
+  }
+};
+
+module.exports = {
+  getStats,
+  getAllBookings,
+  getUsers,
+  updateUserRole,
+  getLawyers,
+  linkLawyerAccount,
+  releaseAccount,
+};

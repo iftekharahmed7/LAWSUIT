@@ -28,6 +28,14 @@ const lawyerSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  // The user account this lawyer signs in with. Set by an admin from the
+  // dashboard; one account can be linked to at most one lawyer profile.
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    unique: true,
+    sparse: true,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Lawyer', lawyerSchema);

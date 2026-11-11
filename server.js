@@ -56,12 +56,15 @@ app.use('/api/summarize', summarizeRoutes);
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admin', adminRoutes);
 
+const lawyerPortalRoutes = require('./routes/lawyerPortalRoutes');
+app.use('/api/lawyer-portal', lawyerPortalRoutes);
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     message: 'LawSuite backend is running!',
     mongoConnected: mongoose.connection.readyState === 1,
-    endpoints: ['/api/auth', '/api/lawyers', '/api/documents', '/api/glossary', '/api/bookings', '/api/chat', '/api/legal-news', '/api/summarize', '/api/admin']
+    endpoints: ['/api/auth', '/api/lawyers', '/api/documents', '/api/glossary', '/api/bookings', '/api/chat', '/api/legal-news', '/api/summarize', '/api/admin', '/api/lawyer-portal']
   });
 });
 

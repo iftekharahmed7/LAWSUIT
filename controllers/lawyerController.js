@@ -33,7 +33,7 @@ const addLawyer = async (req, res) => {
 
 const getAllLawyers = async (req, res) => {
   try {
-    const lawyers = await Lawyer.find().sort({ rating: -1 });
+    const lawyers = await Lawyer.find().select('-user').sort({ rating: -1 });
     res.status(200).json(lawyers);
   } catch (error) {
     return serverError(res, 'all', error);
@@ -57,7 +57,7 @@ const searchLawyers = async (req, res) => {
       filter.name = { $regex: escapeRegex(name.slice(0, 100)), $options: 'i' };
     }
 
-    const lawyers = await Lawyer.find(filter);
+    const lawyers = await Lawyer.find(filter).select('-user');
     res.status(200).json(lawyers);
   } catch (error) {
     return serverError(res, 'search', error);
@@ -69,7 +69,7 @@ const getLawyerById = async (req, res) => {
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(404).json({ message: 'Lawyer not found' });
     }
-    const lawyer = await Lawyer.findById(req.params.id);
+    const lawyer = await Lawyer.findById(req.params.id).select('-user');
     if (!lawyer) {
       return res.status(404).json({ message: 'Lawyer not found' });
     }
