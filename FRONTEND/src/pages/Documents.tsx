@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { API_BASE } from "@/lib/apiBase";
+import { useAuth } from "@/context/AuthContext";
 import TiltCard from "@/components/TiltCard";
 
 type Doc = {
@@ -15,6 +16,8 @@ type Doc = {
 const CATEGORIES = ["contract", "affidavit", "petition", "agreement", "notice", "general"];
 
 export default function Documents() {
+  const { user, token } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [docs, setDocs] = useState<Doc[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -52,7 +55,10 @@ export default function Documents() {
     try {
       const res = await fetch(`${API_BASE}/api/documents`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ title, category, content, fileUrl: fileUrl || undefined }),
       });
       const data = await res.json();
@@ -76,18 +82,20 @@ export default function Documents() {
         <div>
           <h1 className="font-serif text-3xl text-emerald-950">Documents</h1>
           <p className="mt-2 text-stone-600">
-            Reference documents shared by the community - sample notices, agreements, and forms.
+            Reference documents - sample notices, agreements, and forms.
           </p>
         </div>
-        <button
-          onClick={() => setShowForm((s) => !s)}
-          className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-amber-400"
-        >
-          {showForm ? "Cancel" : "Add a document"}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowForm((s) => !s)}
+            className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-amber-400"
+          >
+            {showForm ? "Cancel" : "Add a document"}
+          </button>
+        )}
       </div>
 
-      {showForm && (
+      {isAdmin && showForm && (
         <form
           onSubmit={handleSubmit}
           className="mt-6 space-y-4 rounded-lg border border-stone-200 bg-white p-6"
@@ -156,7 +164,7 @@ export default function Documents() {
         </p>
       )}
       {!loading && !error && docs.length === 0 && (
-        <p className="mt-8 text-stone-400">No documents yet - be the first to add one.</p>
+        <p className="mt-8 text-stone-400">No documents yet.</p>
       )}
 
       <div className="mt-8 space-y-4">
