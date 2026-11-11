@@ -48,6 +48,15 @@ export default function UserMenu() {
           >
             My Bookings
           </Link>
+          {user.role === "lawyer" && (
+            <Link
+              to="/lawyer"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-emerald-950"
+            >
+              Lawyer dashboard
+            </Link>
+          )}
           {user.role === "admin" && (
             <Link
               to="/admin"

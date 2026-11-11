@@ -189,4 +189,22 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, forgotPassword, resetPassword };
+/**
+ * GET /api/auth/me
+ * The signed-in account as it is in the database right now. The frontend
+ * calls this on load so a role change (e.g. being linked as a lawyer) shows
+ * up without having to sign out and back in.
+ */
+const me = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('name email role');
+    if (!user) {
+      return res.status(401).json({ message: 'Account not found' });
+    }
+    res.status(200).json({ user: { name: user.name, email: user.email, role: user.role } });
+  } catch (error) {
+    return serverError(res, 'me', error);
+  }
+};
+
+module.exports = { signup, login, forgotPassword, resetPassword, me };
