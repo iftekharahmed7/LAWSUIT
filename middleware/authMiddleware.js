@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const protect = (req, res, next) => {
   const header = req.headers.authorization;
@@ -30,11 +31,24 @@ const attachUserIfPresent = (req, res, next) => {
   next();
 };
 
-const requireRole = (...roles) => (req, res, next) => {
-  if (!req.user || !roles.includes(req.user.role)) {
-    return res.status(403).json({ message: 'Not authorized for this action' });
+// The role inside a login token is up to 7 days old, so privileged routes
+// re-check it against the database. A demoted or deleted account loses
+// access immediately instead of when its token expires.
+const requireRole = (...roles) => async (req, res, next) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(403).json({ message: 'Not authorized for this action' });
+    }
+    const current = await User.findById(req.user.id).select('role');
+    if (!current || !roles.includes(current.role)) {
+      return res.status(403).json({ message: 'Not authorized for this action' });
+    }
+    req.user.role = current.role;
+    next();
+  } catch (error) {
+    console.error('[auth:requireRole]', error);
+    return res.status(500).json({ message: 'Server error' });
   }
-  next();
 };
 
 module.exports = protect;
