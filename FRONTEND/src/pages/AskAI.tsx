@@ -1,42 +1,62 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { API_BASE } from "@/lib/apiBase";
+import Markdown from "@/components/Markdown";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-import { API_BASE } from "@/lib/apiBase";
+const MAX_QUESTION_CHARS = 2000;
 
 export default function AskAI() {
+  const { token } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [messages, loading]);
 
   async function sendMessage() {
-    if (!input.trim()) return;
-    const userMsg: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMsg]);
+    const question = input.trim();
+    if (!question || loading) return;
+
+    const history = messages; // everything said before this question
+    setMessages([...history, { role: "user", content: question }]);
     setInput("");
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: userMsg.content, language: "en" }),
-      });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.message || `Server responded ${res.status}`);
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`; // signed-in users get a higher limit
+
+      let res: Response;
+      try {
+        res = await fetch(`${API_BASE}/api/chat`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ question, language: "en", history }),
+        });
+      } catch {
+        throw new Error("Couldn't reach the server. Please check your connection and try again.");
       }
-      const data = await res.json();
-      const reply = data.answer || "No answer was returned.";
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "Something went wrong. Please try again.");
+
+      setMessages([
+        ...history,
+        { role: "user", content: question },
+        { role: "assistant", content: data.answer || "No answer was returned." },
+      ]);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong talking to the assistant."
-      );
+      // Put the question back so nothing is lost and it can be resent.
+      setMessages(history);
+      setInput(question);
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -44,36 +64,46 @@ export default function AskAI() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="font-serif text-3xl text-emerald-950">
-        Ask a legal question
-      </h1>
-      <p className="mt-2 text-stone-600">
-        Answers are general information, not legal advice.
-      </p>
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl text-emerald-950">Ask a legal question</h1>
+          <p className="mt-2 text-stone-600">Answers are general information, not legal advice.</p>
+        </div>
+        {messages.length > 0 && (
+          <button
+            onClick={() => {
+              setMessages([]);
+              setError("");
+            }}
+            disabled={loading}
+            className="shrink-0 text-sm text-stone-500 underline hover:text-stone-700 disabled:opacity-50"
+          >
+            New conversation
+          </button>
+        )}
+      </div>
 
-      <div className="mt-8 min-h-[300px] space-y-4 rounded-lg border border-stone-200 bg-white p-6">
-        {messages.length === 0 && (
+      <div className="mt-8 flex max-h-[60vh] min-h-[300px] flex-col gap-4 overflow-y-auto rounded-lg border border-stone-200 bg-white p-6">
+        {messages.length === 0 && !loading && (
           <p className="text-stone-400">Your conversation will appear here.</p>
         )}
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={
-              m.role === "user"
-                ? "ml-auto max-w-[80%] rounded-lg bg-emerald-950 px-4 py-2 text-stone-100"
-                : "mr-auto max-w-[80%] rounded-lg bg-stone-100 px-4 py-2 text-stone-800"
-            }
-          >
-            {m.content}
-          </div>
-        ))}
-        {loading && <p className="text-stone-400">Thinking…</p>}
-        {error && (
-          <p className="text-sm text-red-600">
-            {error} — check that the backend server is running on port
-            5000, and that ANTHROPIC_API_KEY is set in your .env.
-          </p>
+        {messages.map((m, i) =>
+          m.role === "user" ? (
+            <div
+              key={i}
+              className="ml-auto max-w-[80%] whitespace-pre-wrap rounded-lg bg-emerald-950 px-4 py-2 text-stone-100"
+            >
+              {m.content}
+            </div>
+          ) : (
+            <div key={i} className="mr-auto max-w-[90%] rounded-lg bg-stone-100 px-4 py-3 text-stone-800">
+              <Markdown>{m.content}</Markdown>
+            </div>
+          )
         )}
+        {loading && <p className="text-stone-400">Thinking…</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <div ref={bottomRef} />
       </div>
 
       <div className="mt-4 flex gap-3">
@@ -81,12 +111,13 @@ export default function AskAI() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          maxLength={MAX_QUESTION_CHARS}
           placeholder="e.g. My landlord won't return my deposit, what can I do?"
           className="flex-1 rounded-md border border-stone-300 px-4 py-2 focus:border-amber-400 focus:outline-none"
         />
         <button
           onClick={sendMessage}
-          disabled={loading}
+          disabled={loading || !input.trim()}
           className="rounded-md bg-amber-500 px-6 py-2 font-medium text-emerald-950 transition-colors hover:bg-amber-400 disabled:opacity-50"
         >
           Send

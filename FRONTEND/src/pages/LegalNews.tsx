@@ -35,7 +35,7 @@ export default function LegalNews() {
       {loading && <p className="mt-8 text-stone-400">Loading…</p>}
       {error && (
         <p className="mt-8 text-sm text-red-600">
-          {error} — check that the backend server is running on port 5000.
+          {error}
         </p>
       )}
       {!loading && !error && news.length === 0 && (

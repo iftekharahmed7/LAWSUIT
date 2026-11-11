@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { API_BASE } from "@/lib/apiBase";
+import Markdown from "@/components/Markdown";
 
 export default function SummariseDocument() {
+  const { token } = useAuth();
   const [text, setText] = useState("");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,13 +19,21 @@ export default function SummariseDocument() {
     setError("");
     setSummary("");
     try {
-      const res = await fetch(`${API_BASE}/api/summarize`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, language: "en" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || `Server responded ${res.status}`);
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`; // signed-in users get a higher limit
+
+      let res: Response;
+      try {
+        res = await fetch(`${API_BASE}/api/summarize`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ text, language: "en" }),
+        });
+      } catch {
+        throw new Error("Couldn't reach the server. Please check your connection and try again.");
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "Something went wrong. Please try again.");
       setSummary(data.summary);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -54,15 +65,11 @@ export default function SummariseDocument() {
         {loading ? "Summarising…" : "Summarise"}
       </button>
 
-      {error && (
-        <p className="mt-4 text-sm text-red-600">
-          {error} — check that the backend server is running and ANTHROPIC_API_KEY is set.
-        </p>
-      )}
+      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
       {summary && (
-        <div className="mt-8 whitespace-pre-wrap rounded-lg border border-stone-200 bg-white p-6 text-stone-800">
-          {summary}
+        <div className="mt-8 rounded-lg border border-stone-200 bg-white p-6 text-stone-800">
+          <Markdown>{summary}</Markdown>
         </div>
       )}
 
