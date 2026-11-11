@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -23,6 +24,7 @@ import NotFound from "./pages/NotFound";
 export default function App() {
   return (
     <AuthProvider>
+      <LanguageProvider>
       <div className="flex min-h-screen flex-col font-sans">
         <Navbar />
         <main className="flex-1">
@@ -48,6 +50,7 @@ export default function App() {
         </main>
         <Footer />
       </div>
+      </LanguageProvider>
     </AuthProvider>
   );
 }
